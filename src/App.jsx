@@ -11,7 +11,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import LogIn from './pages/auth/login/logIn'
-import SignUp from './pages/auth/signUp/signUp'
+import SignUp from './pages/auth/signup/signup'
 import VerifyOtp from './pages/auth/otp/verifyOtp'
 import CreateProduct from './pages/cms/product_create/createProduct'
 import { useDispatch, useSelector } from 'react-redux';
@@ -74,7 +74,7 @@ function App() {
     },
   ];
 
-  
+
   useEffect(() => {
     dispatch(check_token());
   }, [dispatch]);
