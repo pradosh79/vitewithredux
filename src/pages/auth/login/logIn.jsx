@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Grid, Box, Paper, Typography, TextField, Button, Link } from '@mui/material';
+import { Grid, Box, Paper, Typography, TextField, Button, Link, FormControlLabel, Checkbox } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { logInCrud } from '../../../../redux-toolkit/Slice/auth.slice';
@@ -9,6 +9,7 @@ export default function LogIn() {
     const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors }, watch } = useForm();
     const [loading, setLoading] = useState(false);
+    const [passwordType, setPasswordType] = useState("password");
 
     const dispatch = useDispatch();
     const onSubmit = async (Data) => {
@@ -100,12 +101,24 @@ export default function LogIn() {
                                     },
                                 })}
                                 label="Password"
-                                type="password"
+                                type={passwordType}
                                 fullWidth
                                 margin="normal"
                                 error={!!errors.password}
                                 helperText={errors.password ? errors.password.message : ''}
                             />
+                            <FormControlLabel
+                                        control={
+                                          <Checkbox
+                                            onClick={() =>
+                                              setPasswordType((prev) =>
+                                                prev === "password" ? "text" : "password"
+                                              )
+                                            }
+                                          />
+                                        }
+                                        label="Show Password"
+                                      />
 
                                 <Typography variant="body2" align="center">
                                    Don't have an account? <Link href="/auth/signup">Register</Link>

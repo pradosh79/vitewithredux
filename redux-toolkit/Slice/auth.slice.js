@@ -1,131 +1,171 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../axios/axios";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 
-const initialState = {}
+const initialState = {
+    isAuthenticated: false,
+    user: null,
+    isLoading: false,
+    loadingType: null, // Can be: 'login' | 'register' | 'verifyOtp'
+};
 
 export const registerCrud = createAsyncThunk(
-    "register",
+    "auth/register",
     async (formData, { rejectWithValue }) => {
         try {
-            let response = await axiosInstance.post(`/create/user`, formData);
-            let result = response?.data;
+            const response = await axiosInstance.post(`/create/user`, formData);
+            const result = response.data;
             localStorage.setItem("user_token", result.token);
             localStorage.setItem("user_id", result.user.id);
             localStorage.setItem("name", result.user.name);
             localStorage.setItem("email", result.user.email);
-      
             return result;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data || { message: "Registration failed" }
-            );
+            return rejectWithValue(error.response?.data || { message: "Registration failed" });
         }
     }
 );
 
 export const logInCrud = createAsyncThunk(
-    "login",  
+    "auth/login",
     async (formData, { rejectWithValue }) => {
         try {
-            let response = await axiosInstance.post(`/login/user`, formData);
-            let result = response?.data;
+            const response = await axiosInstance.post(`/login/user`, formData);
+            const result = response.data;
             localStorage.setItem("user_token", result.token);
             localStorage.setItem("user_id", result.user.id);
             localStorage.setItem("name", result.user.name);
             localStorage.setItem("email", result.user.email);
-      
             return result;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data || { message: "Login failed" }
-            );
+            return rejectWithValue(error.response?.data || { message: "Login failed" });
         }
     }
 );
 
 export const verifyOtpCrud = createAsyncThunk(
-    "verifyOtp",  
+    "auth/verifyOtp",
     async (formData, { rejectWithValue }) => {
         try {
-            let response = await axiosInstance.post(`verify-otp`, formData);
-            let result = response?.data;
-            return result;
+            const response = await axiosInstance.post(`verify-otp`, formData);
+            return response.data;
         } catch (error) {
-            return rejectWithValue(
-                error.response?.data || { message: "verifyOtp failed" }
-            );
+            return rejectWithValue(error.response?.data || { message: "OTP verification failed" });
         }
     }
 );
 
+export const profileDas = createAsyncThunk("profile", async (id) => {
+    let response = await axiosInstance.get(`/user/dashboard`);
+    let result = response?.data;
+    return result;
+  });
+
+export const UpdatePass = createAsyncThunk(
+    "updatePass",
+    async (formData, { rejectWithValue }) => {
+      try {
+        let response = await AxiosInstance.post(`/update/password`, formData);
+        let result = response?.data;
+  
+        return result;
+      } catch (error) {
+        return rejectWithValue(
+          error.response?.data || { message: "Password update failed" }
+        );
+      }
+    }
+  );
 export const authSlice = createSlice({
     name: "Authentication",
     initialState,
     reducers: {
         logout: (state) => {
-          localStorage.removeItem("user_token");
-          localStorage.removeItem("user_id");
-          localStorage.removeItem("name");
-          localStorage.removeItem("email");
-    
-          state.isAuthenticated = false;
-          state.user = null;
-          toast.success("Logout Successful");
+            localStorage.removeItem("user_token");
+            localStorage.removeItem("user_id");
+            localStorage.removeItem("name");
+            localStorage.removeItem("email");
+            state.isAuthenticated = false;
+            state.user = null;
+            toast.success("Logout Successful");
         },
         check_token: (state) => {
-          let token = localStorage.getItem("user_token");
-          if (token) {
-            state.isAuthenticated = true;
-          }
+            const token = localStorage.getItem("user_token");
+            if (token) {
+                state.isAuthenticated = true;
+            }
         },
-      },
+    },
     extraReducers: (builder) => {
         builder
-            // Register 
-            .addCase(registerCrud.pending, (state, { payload }) => {
-                state.user = payload?.user;
-                toast.success("Registration Pending");
+            // Register
+            .addCase(registerCrud.pending, (state) => {
+                state.isLoading = true;
+                state.loadingType = "register";
             })
             .addCase(registerCrud.fulfilled, (state, { payload }) => {
+                state.isLoading = false;
+                state.loadingType = null;
                 state.user = payload?.user;
+                //navigate("/auth/otp");
                 toast.success("Registration Successful!");
             })
-            .addCase(registerCrud.rejected, (_, { payload }) => {
+            .addCase(registerCrud.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.loadingType = null;
                 toast.error(payload?.message || "Registration Failed");
             })
-            
-            // Login 
+
+            // Login
             .addCase(logInCrud.pending, (state) => {
                 state.isLoading = true;
-                toast.info("Login Pending...");
+                state.loadingType = "login";
             })
             .addCase(logInCrud.fulfilled, (state, { payload }) => {
                 state.isLoading = false;
+                state.loadingType = null;
                 state.isAuthenticated = true;
                 state.user = payload?.user;
                 toast.success("Login Successful!");
             })
             .addCase(logInCrud.rejected, (state, { payload }) => {
                 state.isLoading = false;
+                state.loadingType = null;
                 toast.error(payload?.message || "Login Failed");
             })
 
-            // verifyOtp 
+            // Verify OTP
             .addCase(verifyOtpCrud.pending, (state) => {
                 state.isLoading = true;
-                toast.info("verifyOtp Pending...");
+                state.loadingType = "verifyOtp";
             })
             .addCase(verifyOtpCrud.fulfilled, (state, { payload }) => {
-                console.log(payload,'frm auth.slice.js');
                 state.isLoading = false;
+                state.loadingType = null;
                 state.email = payload?.email;
-                toast.success("verifyOtp Successful!");
+                toast.success("OTP Verified Successfully!");
             })
             .addCase(verifyOtpCrud.rejected, (state, { payload }) => {
                 state.isLoading = false;
-                toast.error(payload?.message || "verifyOtp Failed");
-            });
+                state.loadingType = null;
+                toast.error(payload?.message || "OTP Verification Failed");
+            })
+
+            //UpdatePass
+            .addCase(UpdatePass.fulfilled, () => {
+                toast.success("Password Updated Successfully!");
+              })
+              .addCase(UpdatePass.rejected, (_, { payload }) => {
+                toast.error(payload?.message || "Password Update Failed");
+              })
+              //profileDashboard
+            .addCase(profileDas.fulfilled, (state, { payload }) => {
+                state.dashboardData = payload;
+                toast.success("Password Updated Successfully!");
+              })
+              .addCase(profileDas.rejected, (_, { payload }) => {
+                toast.error(payload?.message || "Password Update Failed");
+              });
     },
 });
 

@@ -17,6 +17,8 @@ import CreateProduct from './pages/cms/product_create/createProduct'
 import { useDispatch, useSelector } from 'react-redux';
 import { check_token } from "../redux-toolkit/Slice/auth.slice";
 import Dashboard from "./pages/cms/dashboard/dashboard";
+import Profile from "./pages/auth/profile/profile";
+import UpdatePassword from "./pages/updatepassword/password";
 const Update = lazy(() => import("./pages/cms/update/update"));
 
 function App() {
@@ -52,14 +54,18 @@ function App() {
     {
       path: "/auth/otp",
       Component: <VerifyOtp/>,
+    },
+    {
+      path: "/auth/profile",
+      Component: <Profile />,
     }
   ];
 
   const PrivateRouteNames = [
-    // {
-    //   path: "/auth/updatePassword",
-    //   Component: <UpdatePassword />,
-    // },
+    {
+      path: "/auth/updatePassword",
+      Component: <UpdatePassword />,
+    },
     {
       path: "/cms/dashboard",
       Component: <Dashboard/>,

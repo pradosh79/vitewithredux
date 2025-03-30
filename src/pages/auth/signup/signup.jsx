@@ -1,25 +1,57 @@
-import React from 'react'
-import { Grid, Box, Paper, Typography, TextField, Button, Link } from '@mui/material';
+import React,{ useState } from 'react'
+import { Grid, Box, Paper, Typography, TextField, Button, Link, FormControlLabel, Checkbox } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { registerCrud } from '../../../../redux-toolkit/Slice/auth.slice';
+import { useNavigate } from "react-router-dom";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+
+const schema = yup.object().shape({
+    name: yup.string().required("Name is required"),
+    email: yup
+      .string()
+      .email("Invalid email format")
+      .required("Email is required"),
+    password: yup
+      .string()
+      .min(3, "Password must be at least 3 characters")
+      .required("Password is required"),
+  });
 
 export default function SignUp() {
-    const { register, handleSubmit, formState: { errors }, watch } = useForm();
-    
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+      } = useForm({
+        resolver: yupResolver(schema),
+      });
+    const [loading, setLoading] = useState(false);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const [passwordType, setPasswordType] = useState("password");
     const onSubmit = async (Data) => {
-        const { name, email, password} = Data;
-
-        const formdata = new URLSearchParams();
-        formdata.append("name", name);
-        formdata.append("email", email);
-        formdata.append("password", password);
-
-        dispatch(registerCrud(formdata))
-
-
-        console.log(formdata);
+      setLoading(true);
+  
+      const { name, email, password } = Data;
+  
+      const formdata = new URLSearchParams();
+      formdata.append("name", name);
+      formdata.append("email", email);
+      formdata.append("password", password);
+  
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 1500)); // simulate delay
+        const response = await dispatch(registerCrud(formdata)).unwrap();
+        if (response) {
+          navigate("/auth/otp");
+        }
+      } catch (error) {
+        console.error("Registration failed", error);
+      } finally {
+        setLoading(false);
+      }
     };
     
     return (
@@ -98,13 +130,24 @@ export default function SignUp() {
                                         },
                                     })}
                                     label="Password"
-                                    type="password"
+                                    type={passwordType}
                                     fullWidth
                                     margin="normal"
                                     error={!!errors.password} 
                                     helperText={errors.password ? errors.password.message : ''}
                                 />
-                               
+                               <FormControlLabel
+                                                                       control={
+                                                                         <Checkbox
+                                                                           onClick={() =>
+                                                                             setPasswordType((prev) =>
+                                                                               prev === "password" ? "text" : "password"
+                                                                             )
+                                                                           }
+                                                                         />
+                                                                       }
+                                                                       label="Show Password"
+                                                                     />
                                 
                                 <Button
                                     variant="contained"
